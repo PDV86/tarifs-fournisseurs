@@ -88,13 +88,9 @@ textarea{width:100%;min-height:92px;border:1px solid var(--goldhair);background:
 <div id="login" hidden>
   <div class="sc">Pépites de Vin</div>
   <h1>Tarifs fournisseurs</h1>
-  <p>Accès réservé à l'équipe. Saisis le code.</p>
-  <form id="f-code" autocomplete="off">
-    <input id="code" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" aria-label="Code d'accès" placeholder="Code">
-    <button class="btn" id="b-code" type="submit">Entrer</button>
-  </form>
+  <p>Accès réservé à l'équipe. Ouvre l'appli avec ton lien privé.</p>
   <div id="login-msg" class="msg err" hidden></div>
-  <p class="adm">Administration ou code oublié :</p>
+  <p class="adm">Pas de lien sous la main, ou administration :</p>
   <div id="gbtn"></div>
 </div>
 <div id="app" hidden>
@@ -197,7 +193,11 @@ async function appel(chemin, corps, sansSession){
   catch (e) { throw { code: "reseau" }; }
   var j = null;
   try { j = await r.json(); } catch (e2) {}
-  if (r.status === 401 && !sansSession) { ecrireSession(null); montrerLogin("Session expirée. Saisis le code."); throw { code: "session" }; }
+  if (r.status === 401 && !sansSession && cleDansAdresse() && !appel.retente) {
+    appel.retente = true; ecrireSession(null);
+    try { var sx = await appel("lien", { cle: cleDansAdresse() }, true); ecrireSession(sx); appel.retente = false; return appel(chemin, corps, false); } catch (ex) { appel.retente = false; }
+  }
+  if (r.status === 401 && !sansSession) { ecrireSession(null); montrerLogin("Accès expiré. Rouvre ton lien privé ou connecte-toi avec Google."); throw { code: "session" }; }
   if (!r.ok) throw { code: (j && j.erreur) || "interne", message: j && j.message };
   return j;
 }
@@ -376,8 +376,6 @@ var googlePose = false;
 function montrerLogin(msg){
   $("app").hidden = true; $("login").hidden = false;
   var m = $("login-msg"); if (msg) { m.textContent = msg; m.hidden = false; } else m.hidden = true;
-  $("code").value = "";
-  try { $("code").focus(); } catch (e) {}
   if (googlePose) return;
   var essais = 0;
   (function poser(){
@@ -388,22 +386,6 @@ function montrerLogin(msg){
       googlePose = true;
     } else if (essais++ < 40) setTimeout(poser, 250);
   })();
-}
-async function surCode(ev){
-  ev.preventDefault();
-  var m = $("login-msg"); m.hidden = true;
-  var c = $("code").value.trim();
-  if (!/^[0-9]{4,8}$/.test(c)) { m.textContent = "Le code fait 4 à 8 chiffres."; m.hidden = false; return; }
-  $("b-code").disabled = true;
-  try {
-    var s2 = await appel("code", { code: c }, true);
-    ecrireSession(s2); demarrerAppli();
-  } catch (e) {
-    $("code").value = "";
-    m.textContent = e && e.code === "code_faux" ? "Code incorrect." : e && e.code === "bloque" ? "Trop d'essais : le code est bloqué pour l'instant. Réessaie plus tard ou passe par Google." : e && e.code === "code_non_defini" ? "Aucun code n'est encore défini. Connecte-toi avec Google ci-dessous pour le créer." : "Connexion impossible. " + messageErreur(e);
-    m.hidden = false;
-  }
-  $("b-code").disabled = false;
 }
 async function surGoogle(rep){
   var m = $("login-msg"); m.hidden = true;
@@ -417,26 +399,34 @@ async function surGoogle(rep){
 }
 function piedDePage(){
   var q = $("qui"); q.textContent = "";
-  q.appendChild(document.createTextNode(session.mode === "google" ? "Connecté : " + session.email + " - " : "Connecté par code - "));
+  q.appendChild(document.createTextNode(session.mode === "google" ? "Connecté : " + session.email + " - " : "Accès par lien privé - "));
   var b = el("button", "lien", "se déconnecter"); b.type = "button";
   b.addEventListener("click", function(){ ecrireSession(null); try { google.accounts.id.disableAutoSelect(); } catch (e) {} montrerLogin(); });
   q.appendChild(b);
   if (session.mode !== "google") return;
   q.appendChild(document.createTextNode(" - "));
-  var bc = el("button", "lien", "définir ou changer le code d'accès"); bc.type = "button";
+  var bc = el("button", "lien", "créer le lien privé de l'équipe"); bc.type = "button";
   q.appendChild(bc);
-  var zone = el("div"); zone.hidden = true;
-  var f = el("form"); f.id = "f-ncode"; f.autocomplete = "off";
-  var inp = el("input"); inp.id = "ncode"; inp.type = "text"; inp.inputMode = "numeric"; inp.maxLength = 8; inp.autocomplete = "off"; inp.placeholder = "4 à 8 chiffres"; inp.setAttribute("aria-label", "Nouveau code");
-  var ok = el("button", "btn", "Enregistrer"); ok.type = "submit";
-  var info = el("div", null, "Ce code ouvre l'appli sur n'importe quel appareil. Le changer déconnecte les appareils entrés avec l'ancien.");
-  f.appendChild(inp); f.appendChild(ok); zone.appendChild(f); zone.appendChild(info); q.appendChild(zone);
-  bc.addEventListener("click", function(){ zone.hidden = !zone.hidden; if (!zone.hidden) inp.focus(); });
-  f.addEventListener("submit", async function(ev){
-    ev.preventDefault(); ok.disabled = true;
-    try { var r = await appel("definir-code", { code: inp.value.trim() }); info.textContent = "Code enregistré."; inp.value = ""; }
-    catch (e) { info.textContent = messageErreur(e); }
+  var zone = el("div"); zone.hidden = true; zone.style.marginTop = "10px";
+  var info = el("div", null, "Le lien privé ouvre l'appli sans rien taper. En créer un nouveau coupe l'accès de tous les appareils ouverts avec l'ancien.");
+  var ok = el("button", "btn", "Créer un nouveau lien"); ok.type = "button"; ok.style.margin = "8px 0";
+  var champ = el("textarea"); champ.readOnly = true; champ.hidden = true; champ.style.minHeight = "70px"; champ.style.fontSize = "13px"; champ.setAttribute("aria-label", "Lien privé");
+  var copier = el("button", "btn ghost", "Copier le lien"); copier.type = "button"; copier.hidden = true;
+  zone.appendChild(info); zone.appendChild(ok); zone.appendChild(champ); zone.appendChild(copier); q.appendChild(zone);
+  bc.addEventListener("click", function(){ zone.hidden = !zone.hidden; });
+  ok.addEventListener("click", async function(){
+    ok.disabled = true;
+    try {
+      var r = await appel("creer-lien", {});
+      champ.value = r.lien; champ.hidden = false; copier.hidden = false;
+      info.textContent = "Lien créé. Envoie-le à chaque personne de l'équipe et ouvre-le une fois sur chaque appareil. Garde-le pour toi : quiconque l'a peut ouvrir l'appli.";
+    } catch (e) { info.textContent = messageErreur(e); }
     ok.disabled = false;
+  });
+  copier.addEventListener("click", function(){
+    champ.focus(); champ.select();
+    try { navigator.clipboard.writeText(champ.value).then(function(){ copier.textContent = "Lien copié"; }, function(){ copier.textContent = "Sélectionné : copie-le à la main"; }); }
+    catch (e) { copier.textContent = "Sélectionné : copie-le à la main"; }
   });
 }
 async function demarrerAppli(){
@@ -453,9 +443,20 @@ async function demarrerAppli(){
     $("etat").textContent = (n ? Number(n).toLocaleString("fr-FR") + " prix en vigueur" : "") + (k ? " · " + k + " catalogues" : "") + (d ? " · mis à jour le " + dateFr(String(d).slice(0, 10)) : "");
   } catch (e3) { $("etat").textContent = ""; if (!e3 || e3.code !== "session") alerte(messageErreur(e3)); }
 }
-$("f-code").addEventListener("submit", surCode);
-session = lireSession();
-if (session) demarrerAppli(); else montrerLogin();
+function cleDansAdresse(){
+  var m = String(location.hash || "").match(/[#&]cle=([A-Za-z0-9_\-]{20,80})/);
+  return m ? m[1] : null;
+}
+(async function ouvrir(){
+  session = lireSession();
+  if (session) { demarrerAppli(); return; }
+  var cle = cleDansAdresse();
+  if (cle) {
+    try { var s4 = await appel("lien", { cle: cle }, true); ecrireSession(s4); demarrerAppli(); return; }
+    catch (e) { montrerLogin(e && e.code === "lien_invalide" ? "Ce lien privé n'est plus valable. Demande le nouveau lien." : e && e.code === "reseau" ? "Pas de connexion. Vérifie le réseau et rouvre l'appli." : "Ouverture impossible avec ce lien. Réessaie."); return; }
+  }
+  montrerLogin();
+})();
 })();
 </script>
 </body>

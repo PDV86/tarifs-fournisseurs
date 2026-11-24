@@ -1,8 +1,6 @@
 {
  "name": "Tarifs fournisseurs - Pépites de Vin",
  "short_name": "Tarifs PDV",
- "start_url": "./",
- "scope": "./",
  "display": "standalone",
  "background_color": "#f4ebdf",
  "theme_color": "#500e19",
