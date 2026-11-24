@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarifs fournisseurs - Pépites de Vin</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#500e19">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tarifs PDV">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600&display=swap">
+<style>
+:root{--vin:#500e19;--brique:#8d4535;--vert:#183300;--or:#b8862e;--rose3:#eadcd8;--champ:#f4ebdf;--creme:#fbf5ec;--hair:rgba(80,14,25,.14);--goldhair:rgba(184,134,46,.55)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--champ);color:var(--vin);font-family:'Josefin Sans',Futura,'Century Gothic',system-ui,sans-serif;font-weight:400;font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.wrap{max-width:760px;margin:0 auto;padding:0 14px 80px}
+header{padding:18px 14px 10px;max-width:760px;margin:0 auto}
+h1{margin:0;font-family:Didot,'Bodoni MT',Georgia,serif;font-weight:400;text-transform:uppercase;letter-spacing:.12em;font-size:21px;line-height:1.2}
+.sc{font-weight:500;text-transform:uppercase;letter-spacing:.2em;font-size:10.5px;color:var(--or)}
+#etat{font-size:13px;color:var(--brique);margin-top:4px;min-height:18px}
+.tabs{position:sticky;top:0;z-index:5;background:var(--champ);display:flex;gap:8px;padding:8px 14px;max-width:760px;margin:0 auto;border-bottom:1px solid var(--hair)}
+.tab{flex:1;border:1px solid var(--hair);background:transparent;border-radius:999px;padding:10px 8px 8px;font-weight:500;letter-spacing:.06em;cursor:pointer}
+.tab[aria-selected=true]{background:var(--vin);color:var(--creme);border-color:var(--vin)}
+.field{display:flex;gap:8px;margin-top:12px}
+.field input[type=search]{flex:1;min-width:0;border:1px solid var(--goldhair);background:var(--creme);border-radius:12px;padding:14px 14px 12px;font-size:17px;outline:none}
+.field input[type=search]:focus{border-color:var(--vin)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--hair);background:var(--creme);border-radius:999px;padding:7px 12px 5px;font-size:14px;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed=true]{background:var(--brique);color:#fff;border-color:var(--brique)}
+.opts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0 2px;font-size:14px}
+.opts input[type=number]{width:92px;border:1px solid var(--hair);background:var(--creme);border-radius:8px;padding:7px 8px 5px}
+.opts select{border:1px solid var(--hair);background:var(--creme);border-radius:8px;padding:7px 6px 5px}
+.opts label{display:flex;gap:6px;align-items:center}
+#compte{font-size:13px;color:var(--brique);margin:10px 2px 6px;min-height:18px}
+.card{background:var(--creme);border:1px solid var(--hair);border-radius:14px;margin:8px 0;overflow:hidden}
+.card>button{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;padding:13px 14px 11px;cursor:pointer}
+.card .main{flex:1;min-width:0}
+.card .des{font-weight:500;font-size:16px;overflow-wrap:anywhere}
+.card .sub{font-size:13.5px;color:var(--brique);margin-top:2px;overflow-wrap:anywhere}
+.card .src{font-size:12.5px;color:rgba(80,14,25,.62);margin-top:3px}
+.card .prix{flex:none;text-align:right;font-weight:600;font-size:19px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.card .prix small{display:block;font-weight:400;font-size:11px;color:var(--brique);letter-spacing:.05em}
+.badge{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 6px 1px;margin-left:6px;vertical-align:middle}
+.badge.h{background:var(--rose3);color:var(--brique)}
+.badge.v{background:#f3dfb0;color:#6b4a0d}
+.det{border-top:1px solid var(--hair);padding:10px 14px 14px;font-size:14px}
+.det dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.det dt{color:var(--brique)}
+.det dd{margin:0;overflow-wrap:anywhere}
+.det .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{border:1px solid var(--vin);background:var(--vin);color:var(--creme);border-radius:10px;padding:10px 14px 8px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--vin)}
+.btn:disabled{opacity:.5;cursor:default}
+.hist{margin-top:10px;border-top:1px dashed var(--hair);padding-top:8px}
+.hist div{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-variant-numeric:tabular-nums}
+.msg{background:var(--creme);border:1px solid var(--goldhair);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:15px}
+.msg.err{border-color:var(--brique)}
+#plus{width:100%;margin-top:8px}
+textarea{width:100%;min-height:92px;border:1px solid var(--goldhair);background:var(--creme);border-radius:12px;padding:12px 14px;font-size:16px;outline:none;resize:vertical;margin-top:12px}
+.ex{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#rep{white-space:pre-wrap;overflow-wrap:anywhere}
+.note{font-size:12.5px;color:rgba(80,14,25,.62);margin-top:10px}
+#login{max-width:420px;margin:12vh auto 0;padding:0 20px;text-align:center}
+#login p{color:var(--brique);font-size:15px}
+#gbtn{display:flex;justify-content:center;margin:22px 0 10px;min-height:44px}
+#qui{font-size:12.5px;color:rgba(80,14,25,.62);margin-top:26px;text-align:center}
+#qui button{background:none;border:0;text-decoration:underline;cursor:pointer;color:inherit;padding:0}
+.crit{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 2px}
+.crit span{background:var(--rose3);border-radius:999px;padding:5px 10px 3px;font-size:13px}
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <div class="sc">Pépites de Vin</div>
+  <h1>Tarifs fournisseurs</h1>
+  <p>Accès réservé à l'équipe. Connecte-toi avec ton compte Google.</p>
+  <div id="gbtn"></div>
+  <div id="login-msg" class="msg err" hidden></div>
+</div>
+<div id="app" hidden>
+<header>
+  <div class="sc">Pépites de Vin</div>
+  <h1>Tarifs fournisseurs</h1>
+  <div id="etat">Connexion à la base...</div>
+</header>
+<div class="tabs" role="tablist">
+  <button class="tab" role="tab" id="t-rech" aria-selected="true">Recherche</button>
+  <button class="tab" role="tab" id="t-ia" aria-selected="false">Demander à l'IA</button>
+</div>
+<div class="wrap">
+  <div id="alerte" class="msg err" hidden></div>
+
+  <section id="v-rech">
+    <form class="field" id="f-rech" autocomplete="off">
+      <input type="search" id="q" placeholder="Domaine, cuvée, appellation, référence..." enterkeyhint="search" aria-label="Recherche">
+    </form>
+    <div class="chips" id="chips"></div>
+    <div class="opts">
+      <label>Prix max <input type="number" id="pmax" min="0" step="0.5" inputmode="decimal" placeholder="€ HT"></label>
+      <select id="tri" aria-label="Tri">
+        <option value="pertinence">Pertinence</option>
+        <option value="prix_asc">Prix croissant</option>
+        <option value="prix_desc">Prix décroissant</option>
+        <option value="nom">Nom</option>
+      </select>
+      <label><input type="checkbox" id="hist"> Anciens tarifs</label>
+    </div>
+    <div id="compte"></div>
+    <div id="liste"></div>
+    <button class="btn ghost" id="plus" hidden>Voir plus</button>
+  </section>
+
+  <section id="v-ia" hidden>
+    <textarea id="question" placeholder="Ex. : un chablis à moins de 12 € HT, avec les paliers de remise"></textarea>
+    <div class="ex" id="exemples"></div>
+    <button class="btn" id="demander">Demander</button>
+        <div id="rep-box" class="msg" hidden><div id="rep"></div></div>
+    <div class="crit" id="crit"></div>
+    <div id="compte-ia" style="font-size:13px;color:var(--brique);margin:8px 2px 6px"></div>
+    <div id="liste-ia"></div>
+    <div class="note">L'IA traduit ta question en critères de recherche, puis la base répond : les prix affichés viennent toujours de la base, jamais de l'IA.</div>
+  </section>
+  <div id="qui"></div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var API = "https://tarifs-mcp.wandering-poetry-b31f.workers.dev/api/";
+var CLIENT_GOOGLE = "402746003190-cpqorb6b69uj4per01b7nhgvlm6v5ohf.apps.googleusercontent.com";
+var CLE_SESSION = "tarifs-pdv-session";
+var $ = function(id){ return document.getElementById(id); };
+var session = null;
+var etatRech = { decalage: 0, total: 0, jeton: 0, filtre: "" };
+var FILTRES = [
+  { id: "", lib: "Tout" },
+  { id: "c:rouge", lib: "Rouges" },
+  { id: "c:blanc", lib: "Blancs" },
+  { id: "c:ros", lib: "Rosés" },
+  { id: "c:effervescent", lib: "Bulles" },
+  { id: "k:spiritueux", lib: "Spiritueux" },
+  { id: "k:bi", lib: "Bières" }
+];
+var EXEMPLES = [
+  "Un chablis à moins de 12 € HT",
+  "Les magnums de rosé de Provence, du moins cher au plus cher",
+  "Le rhum le moins cher chez LMDW",
+  "Un bourgogne rouge entre 10 et 15 €"
+];
+
+function el(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined && txt !== null) e.textContent = String(txt); return e; }
+function euros(n){ return (typeof n === "number") ? n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €" : ""; }
+function dateFr(d){ if (!d || typeof d !== "string") return ""; var m = d.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + "/" + m[2] + "/" + m[1] : d; }
+function attendre(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+function messageErreur(e){
+  var c = e && e.code;
+  if (c === "session") return "Session expirée. Reconnecte-toi.";
+  if (c === "reseau") return "Pas de connexion à la base. Vérifie le réseau et réessaie.";
+  if (c === "refus") return String(e.message || "Demande refusée.").slice(0, 300);
+  return "Une erreur est survenue. Réessaie." + (e && e.message ? " (" + String(e.message).slice(0, 160) + ")" : "");
+}
+function alerte(txt){ var a = $("alerte"); if (!txt) { a.hidden = true; return; } a.textContent = txt; a.hidden = false; }
+
+function lireSession(){
+  try { var v = JSON.parse(localStorage.getItem(CLE_SESSION) || "null"); if (v && v.jeton && v.expire > Date.now() / 1000 + 60) return v; } catch (e) {}
+  return null;
+}
+function ecrireSession(v){ session = v; try { if (v) localStorage.setItem(CLE_SESSION, JSON.stringify(v)); else localStorage.removeItem(CLE_SESSION); } catch (e) {} }
+
+async function appel(chemin, corps, sansSession){
+  var h = { "content-type": "application/json" };
+  if (!sansSession) { if (!session) throw { code: "session" }; h.authorization = "Bearer " + session.jeton; }
+  var r;
+  try { r = await fetch(API + chemin, { method: "POST", headers: h, body: JSON.stringify(corps || {}) }); }
+  catch (e) { throw { code: "reseau" }; }
+  var j = null;
+  try { j = await r.json(); } catch (e2) {}
+  if (r.status === 401) { ecrireSession(null); montrerLogin("Session expirée. Reconnecte-toi."); throw { code: "session" }; }
+  if (!r.ok) throw { code: (j && j.erreur) || "interne", message: j && j.message };
+  return j;
+}
+var NOMS = { tarifs_rechercher: "rechercher", tarifs_fiche: "fiche", tarifs_etat: "etat" };
+function outil(nom, args){ return appel("outil", { nom: NOMS[nom] || nom, args: args || {} }); }
+
+// ---------- Recherche ----------
+function criteres(){
+  var a = { limite: 30, decalage: etatRech.decalage };
+  var q = $("q").value.trim();
+  if (q) a.q = q;
+  var f = etatRech.filtre;
+  if (f.indexOf("c:") === 0) a.couleur = f.slice(2);
+  if (f.indexOf("k:") === 0) a.categorie = f.slice(2);
+  var pm = parseFloat(String($("pmax").value).replace(",", "."));
+  if (!isNaN(pm) && pm > 0) a.prix_max = pm;
+  if ($("hist").checked) a.historique = true;
+  var tri = $("tri").value;
+  if (tri !== "pertinence") a.tri = tri;
+  return a;
+}
+function aUnCritere(a){ return !!(a.q || a.couleur || a.categorie || a.prix_max); }
+
+function ligneDetail(dl, nom, val){ if (val === undefined || val === null || val === "") return; dl.appendChild(el("dt", null, nom)); dl.appendChild(el("dd", null, val)); }
+
+function carte(l){
+  var c = el("div", "card");
+  var b = el("button"); b.type = "button"; b.setAttribute("aria-expanded", "false");
+  var main = el("div", "main");
+  var des = el("div", "des", l.designation || "(sans nom)");
+  if (l.statut === "historique") des.appendChild(el("span", "badge h", "ancien"));
+  if (typeof l.prix_ht !== "number" || (l.fiabilite && /v[ée]rifier/i.test(l.fiabilite))) des.appendChild(el("span", "badge v", "à vérifier"));
+  main.appendChild(des);
+  var sub = [l.producteur, l.millesime, l.couleur, l.format].filter(function(x){ return x; }).join(" · ");
+  if (sub) main.appendChild(el("div", "sub", sub));
+  var src = [l.fournisseur && l.fournisseur !== l.producteur ? l.fournisseur : null, l.date_tarif ? "tarif du " + dateFr(l.date_tarif) : null].filter(function(x){ return x; }).join(" · ");
+  if (src) main.appendChild(el("div", "src", src));
+  var prix = el("div", "prix", typeof l.prix_ht === "number" ? euros(l.prix_ht) : "?");
+  prix.appendChild(el("small", null, "HT / " + (l.unite_prix || "bouteille")));
+  b.appendChild(main); b.appendChild(prix);
+  c.appendChild(b);
+  var det = null;
+  b.addEventListener("click", function(){
+    if (det) { det.hidden = !det.hidden; b.setAttribute("aria-expanded", String(!det.hidden)); return; }
+    det = el("div", "det");
+    var dl = el("dl");
+    ligneDetail(dl, "Fournisseur", l.fournisseur);
+    ligneDetail(dl, "Référence", l.reference);
+    ligneDetail(dl, "Conditionnement", l.conditionnement);
+    ligneDetail(dl, "Remises", l.remises);
+    ligneDetail(dl, "Remarques", l.remarques);
+    ligneDetail(dl, "Tarif du", dateFr(l.date_tarif));
+    ligneDetail(dl, "Fichier", l.fichier);
+    det.appendChild(dl);
+    var acts = el("div", "acts");
+    var bh = el("button", "btn ghost", "Évolution du prix"); bh.type = "button";
+    var zone = el("div", "hist"); zone.hidden = true;
+    bh.addEventListener("click", async function(){
+      bh.disabled = true; bh.textContent = "Chargement...";
+      try {
+        var f = await outil("tarifs_fiche", { id: l.id });
+        zone.textContent = "";
+        var h = (f && f.meme_produit_tous_catalogues) || [];
+        if (h.length <= 1) zone.appendChild(el("div", null, "Un seul tarif connu pour ce produit."));
+        h.forEach(function(x){
+          var r = el("div");
+          r.appendChild(el("span", null, [dateFr(x.date_tarif), x.fournisseur, x.millesime, x.statut].filter(function(y){ return y; }).join(" · ")));
+          r.appendChild(el("strong", null, typeof x.prix_ht === "number" ? euros(x.prix_ht) : "?"));
+          zone.appendChild(r);
+        });
+        zone.hidden = false; bh.hidden = true;
+      } catch (e) { bh.disabled = false; bh.textContent = "Évolution du prix"; zone.textContent = messageErreur(e); zone.hidden = false; }
+    });
+    acts.appendChild(bh);
+    if (typeof l.lien === "string" && l.lien.indexOf("https://") === 0) {
+      var a = el("a", "btn ghost", "Ouvrir le tarif source"); a.href = l.lien; a.target = "_blank"; a.rel = "noopener";
+      acts.appendChild(a);
+    }
+    det.appendChild(acts); det.appendChild(zone);
+    c.appendChild(det);
+    b.setAttribute("aria-expanded", "true");
+  });
+  return c;
+}
+
+async function chercher(suite){
+  var jeton = ++etatRech.jeton;
+  if (!suite) etatRech.decalage = 0;
+  var a = criteres();
+  if (!aUnCritere(a)) { $("liste").textContent = ""; $("compte").textContent = "Tape un nom ou choisis un filtre."; $("plus").hidden = true; return; }
+  if (a.q && a.q.length < 2) return;
+  $("compte").textContent = "Recherche...";
+  try {
+    var r = await outil("tarifs_rechercher", a);
+    if (jeton !== etatRech.jeton) return;
+    alerte("");
+    if (!suite) $("liste").textContent = "";
+    var lignes = (r && r.lignes) || [];
+    lignes.forEach(function(l){ $("liste").appendChild(carte(l)); });
+    etatRech.total = (r && r.total) || 0;
+    etatRech.decalage += lignes.length;
+    $("compte").textContent = etatRech.total === 0 ? "Aucun résultat. Essaie moins de mots, ou coche « Anciens tarifs »." : etatRech.total.toLocaleString("fr-FR") + " résultat" + (etatRech.total > 1 ? "s" : "") + (etatRech.total > etatRech.decalage ? " (" + etatRech.decalage + " affichés)" : "");
+    $("plus").hidden = !(etatRech.total > etatRech.decalage);
+  } catch (e) {
+    if (jeton !== etatRech.jeton) return;
+    $("compte").textContent = "";
+    alerte(messageErreur(e));
+  }
+}
+var minuteur = null;
+function chercherBientot(){ clearTimeout(minuteur); minuteur = setTimeout(function(){ chercher(false); }, 450); }
+
+// ---------- IA ----------
+var LIB_CRIT = { q: "mots", fournisseur: "fournisseur", couleur: "couleur", categorie: "catégorie", format: "format", millesime: "millésime", prix_min: "prix min", prix_max: "prix max", tri: "tri", historique: "anciens tarifs" };
+async function demander(){
+  var q = $("question").value.trim();
+  if (!q) return;
+  $("demander").disabled = true;
+  $("rep-box").hidden = false; $("rep").textContent = "Je cherche...";
+  $("crit").textContent = ""; $("liste-ia").textContent = ""; $("compte-ia").textContent = "";
+  try {
+    var r = await appel("ia", { question: q });
+    $("rep-box").hidden = true;
+    var c = r.criteres || {};
+    Object.keys(c).forEach(function(k){
+      var v = c[k];
+      if (k === "tri") v = v === "prix_asc" ? "prix croissant" : v === "prix_desc" ? "prix décroissant" : v;
+      if (k === "couleur" && v === "ros") v = "rosé";
+      if (k === "categorie" && v === "bi") v = "bière";
+      if (k === "prix_min" || k === "prix_max") v = v + " €";
+      if (k === "historique") v = "oui";
+      $("crit").appendChild(el("span", null, (LIB_CRIT[k] || k) + " : " + v));
+    });
+    var n = r.total || 0;
+    $("compte-ia").textContent = n === 0 ? "Aucun résultat pour ces critères. Reformule, ou passe par l'onglet Recherche." : n.toLocaleString("fr-FR") + " résultat" + (n > 1 ? "s" : "") + (r.elargi ? " (recherche élargie)" : "") + (n > (r.lignes || []).length ? ", les " + r.lignes.length + " premiers" : "");
+    (r.lignes || []).forEach(function(l){ $("liste-ia").appendChild(carte(l)); });
+  } catch (e) {
+    $("rep-box").hidden = false;
+    $("rep").textContent = e && e.code === "refus" && /IA/.test(String(e.message)) ? "L'IA gratuite est indisponible pour l'instant (quota du jour atteint ou service occupé). Utilise l'onglet Recherche." : messageErreur(e);
+  }
+  $("demander").disabled = false;
+}
+
+// ---------- Interface ----------
+function onglet(ia){
+  $("t-rech").setAttribute("aria-selected", String(!ia)); $("t-ia").setAttribute("aria-selected", String(ia));
+  $("v-rech").hidden = ia; $("v-ia").hidden = !ia;
+}
+FILTRES.forEach(function(f){
+  var b = el("button", "chip", f.lib); b.type = "button"; b.setAttribute("aria-pressed", String(f.id === ""));
+  b.addEventListener("click", function(){
+    etatRech.filtre = f.id;
+    Array.prototype.forEach.call($("chips").children, function(x){ x.setAttribute("aria-pressed", "false"); });
+    b.setAttribute("aria-pressed", "true");
+    chercher(false);
+  });
+  $("chips").appendChild(b);
+});
+EXEMPLES.forEach(function(t){
+  var b = el("button", "chip", t); b.type = "button";
+  b.addEventListener("click", function(){ $("question").value = t; });
+  $("exemples").appendChild(b);
+});
+$("t-rech").addEventListener("click", function(){ onglet(false); });
+$("t-ia").addEventListener("click", function(){ onglet(true); });
+$("f-rech").addEventListener("submit", function(e){ e.preventDefault(); clearTimeout(minuteur); chercher(false); $("q").blur(); });
+$("q").addEventListener("input", chercherBientot);
+$("pmax").addEventListener("input", chercherBientot);
+$("tri").addEventListener("change", function(){ chercher(false); });
+$("hist").addEventListener("change", function(){ chercher(false); });
+$("plus").addEventListener("click", function(){ chercher(true); });
+$("demander").addEventListener("click", demander);
+$("compte").textContent = "Tape un nom ou choisis un filtre.";
+
+function montrerLogin(msg){
+  $("app").hidden = true; $("login").hidden = false;
+  var m = $("login-msg"); if (msg) { m.textContent = msg; m.hidden = false; } else m.hidden = true;
+  var essais = 0;
+  (function poser(){
+    if (window.google && google.accounts && google.accounts.id) {
+      google.accounts.id.initialize({ client_id: CLIENT_GOOGLE, callback: surGoogle, auto_select: true, use_fedcm_for_prompt: true });
+      $("gbtn").textContent = "";
+      google.accounts.id.renderButton($("gbtn"), { theme: "outline", size: "large", shape: "pill", text: "signin_with", locale: "fr" });
+    } else if (essais++ < 40) setTimeout(poser, 250);
+    else { m.textContent = "Le bouton Google ne se charge pas. Vérifie la connexion puis recharge la page."; m.hidden = false; }
+  })();
+}
+async function surGoogle(rep){
+  var m = $("login-msg"); m.hidden = true;
+  try {
+    var s2 = await appel("session", { credential: rep && rep.credential }, true);
+    ecrireSession(s2); demarrerAppli();
+  } catch (e) {
+    m.textContent = e && e.code === "non_autorise" ? String(e.message || "Ce compte n'est pas autorisé.") : "Connexion impossible. " + messageErreur(e);
+    m.hidden = false;
+  }
+}
+async function demarrerAppli(){
+  $("login").hidden = true; $("app").hidden = false;
+  $("qui").textContent = "Connecté : " + session.email + " - ";
+  var b = el("button", null, "se déconnecter"); b.type = "button";
+  b.addEventListener("click", function(){ ecrireSession(null); try { google.accounts.id.disableAutoSelect(); } catch (e) {} montrerLogin(); });
+  $("qui").appendChild(b);
+  try {
+    var e2 = await outil("tarifs_etat", {});
+    var n = e2 && e2.lignes && e2.lignes.lignes_courantes, k = e2 && e2.catalogues && e2.catalogues.courants;
+    var d = e2 && e2.derniers_imports && e2.derniers_imports[0] && e2.derniers_imports[0].importe_le;
+    $("etat").textContent = (n ? Number(n).toLocaleString("fr-FR") + " prix en vigueur" : "") + (k ? " · " + k + " catalogues" : "") + (d ? " · mis à jour le " + dateFr(String(d).slice(0, 10)) : "");
+  } catch (e3) { $("etat").textContent = ""; if (!e3 || e3.code !== "session") alerte(messageErreur(e3)); }
+}
+session = lireSession();
+if (session) demarrerAppli(); else montrerLogin();
+})();
+</script>
+</body>
+</html>

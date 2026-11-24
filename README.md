@@ -1,2 +1,4 @@
-# tarifs-fournisseurs
-Appli interne Pépites de Vin : consultation des tarifs fournisseurs (interface seule, accès par connexion Google)
+# Tarifs fournisseurs - Pépites de Vin
+
+Appli interne de consultation des tarifs fournisseurs. Accès réservé à l'équipe (connexion Google).
+Ce dépôt ne contient que l'interface : aucune donnée ni aucun secret. Les prix sont servis par une API privée après authentification.
