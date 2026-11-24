@@ -72,9 +72,14 @@ textarea{width:100%;min-height:92px;border:1px solid var(--goldhair);background:
 .note{font-size:12.5px;color:rgba(80,14,25,.62);margin-top:10px}
 #login{max-width:420px;margin:12vh auto 0;padding:0 20px;text-align:center}
 #login p{color:var(--brique);font-size:15px}
-#gbtn{display:flex;justify-content:center;margin:22px 0 10px;min-height:44px}
+#gbtn{display:flex;justify-content:center;margin:8px 0 10px;min-height:44px}
+#f-code{display:flex;gap:8px;justify-content:center;margin:18px 0 6px}
+#code,#ncode{width:150px;text-align:center;font-size:24px;letter-spacing:.3em;border:1px solid var(--goldhair);background:var(--creme);border-radius:12px;padding:12px 8px 9px;outline:none}
+#login .adm{margin-top:34px;font-size:12.5px;color:rgba(80,14,25,.62)}
+#f-ncode{display:flex;gap:8px;justify-content:center;margin:10px 0}
+#ncode{font-size:18px;width:130px;padding:9px 8px 7px}
 #qui{font-size:12.5px;color:rgba(80,14,25,.62);margin-top:26px;text-align:center}
-#qui button{background:none;border:0;text-decoration:underline;cursor:pointer;color:inherit;padding:0}
+#qui button.lien{background:none;border:0;text-decoration:underline;cursor:pointer;color:inherit;padding:0}
 .crit{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 2px}
 .crit span{background:var(--rose3);border-radius:999px;padding:5px 10px 3px;font-size:13px}
 </style>
@@ -83,9 +88,14 @@ textarea{width:100%;min-height:92px;border:1px solid var(--goldhair);background:
 <div id="login" hidden>
   <div class="sc">Pépites de Vin</div>
   <h1>Tarifs fournisseurs</h1>
-  <p>Accès réservé à l'équipe. Connecte-toi avec ton compte Google.</p>
-  <div id="gbtn"></div>
+  <p>Accès réservé à l'équipe. Saisis le code.</p>
+  <form id="f-code" autocomplete="off">
+    <input id="code" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off" aria-label="Code d'accès" placeholder="Code">
+    <button class="btn" id="b-code" type="submit">Entrer</button>
+  </form>
   <div id="login-msg" class="msg err" hidden></div>
+  <p class="adm">Administration ou code oublié :</p>
+  <div id="gbtn"></div>
 </div>
 <div id="app" hidden>
 <header>
@@ -168,13 +178,13 @@ function messageErreur(e){
   var c = e && e.code;
   if (c === "session") return "Session expirée. Reconnecte-toi.";
   if (c === "reseau") return "Pas de connexion à la base. Vérifie le réseau et réessaie.";
-  if (c === "refus") return String(e.message || "Demande refusée.").slice(0, 300);
+  if (c === "refus" || c === "bloque") return String(e.message || "Demande refusée.").slice(0, 300);
   return "Une erreur est survenue. Réessaie." + (e && e.message ? " (" + String(e.message).slice(0, 160) + ")" : "");
 }
 function alerte(txt){ var a = $("alerte"); if (!txt) { a.hidden = true; return; } a.textContent = txt; a.hidden = false; }
 
 function lireSession(){
-  try { var v = JSON.parse(localStorage.getItem(CLE_SESSION) || "null"); if (v && v.jeton && v.expire > Date.now() / 1000 + 60) return v; } catch (e) {}
+  try { var v = JSON.parse(localStorage.getItem(CLE_SESSION) || "null"); if (v && v.jeton && v.expire > Date.now() / 1000 + 60) { if (!v.mode) v.mode = String(v.email || "").indexOf("@") > 0 ? "google" : "code"; return v; } } catch (e) {}
   return null;
 }
 function ecrireSession(v){ session = v; try { if (v) localStorage.setItem(CLE_SESSION, JSON.stringify(v)); else localStorage.removeItem(CLE_SESSION); } catch (e) {} }
@@ -187,7 +197,7 @@ async function appel(chemin, corps, sansSession){
   catch (e) { throw { code: "reseau" }; }
   var j = null;
   try { j = await r.json(); } catch (e2) {}
-  if (r.status === 401) { ecrireSession(null); montrerLogin("Session expirée. Reconnecte-toi."); throw { code: "session" }; }
+  if (r.status === 401 && !sansSession) { ecrireSession(null); montrerLogin("Session expirée. Saisis le code."); throw { code: "session" }; }
   if (!r.ok) throw { code: (j && j.erreur) || "interne", message: j && j.message };
   return j;
 }
@@ -362,18 +372,38 @@ $("plus").addEventListener("click", function(){ chercher(true); });
 $("demander").addEventListener("click", demander);
 $("compte").textContent = "Tape un nom ou choisis un filtre.";
 
+var googlePose = false;
 function montrerLogin(msg){
   $("app").hidden = true; $("login").hidden = false;
   var m = $("login-msg"); if (msg) { m.textContent = msg; m.hidden = false; } else m.hidden = true;
+  $("code").value = "";
+  try { $("code").focus(); } catch (e) {}
+  if (googlePose) return;
   var essais = 0;
   (function poser(){
     if (window.google && google.accounts && google.accounts.id) {
-      google.accounts.id.initialize({ client_id: CLIENT_GOOGLE, callback: surGoogle, auto_select: true, use_fedcm_for_prompt: true });
+      google.accounts.id.initialize({ client_id: CLIENT_GOOGLE, callback: surGoogle });
       $("gbtn").textContent = "";
-      google.accounts.id.renderButton($("gbtn"), { theme: "outline", size: "large", shape: "pill", text: "signin_with", locale: "fr" });
+      google.accounts.id.renderButton($("gbtn"), { theme: "outline", size: "medium", shape: "pill", text: "signin_with", locale: "fr" });
+      googlePose = true;
     } else if (essais++ < 40) setTimeout(poser, 250);
-    else { m.textContent = "Le bouton Google ne se charge pas. Vérifie la connexion puis recharge la page."; m.hidden = false; }
   })();
+}
+async function surCode(ev){
+  ev.preventDefault();
+  var m = $("login-msg"); m.hidden = true;
+  var c = $("code").value.trim();
+  if (!/^[0-9]{4,8}$/.test(c)) { m.textContent = "Le code fait 4 à 8 chiffres."; m.hidden = false; return; }
+  $("b-code").disabled = true;
+  try {
+    var s2 = await appel("code", { code: c }, true);
+    ecrireSession(s2); demarrerAppli();
+  } catch (e) {
+    $("code").value = "";
+    m.textContent = e && e.code === "code_faux" ? "Code incorrect." : e && e.code === "bloque" ? "Trop d'essais : le code est bloqué pour l'instant. Réessaie plus tard ou passe par Google." : e && e.code === "code_non_defini" ? "Aucun code n'est encore défini. Connecte-toi avec Google ci-dessous pour le créer." : "Connexion impossible. " + messageErreur(e);
+    m.hidden = false;
+  }
+  $("b-code").disabled = false;
 }
 async function surGoogle(rep){
   var m = $("login-msg"); m.hidden = true;
@@ -385,12 +415,37 @@ async function surGoogle(rep){
     m.hidden = false;
   }
 }
+function piedDePage(){
+  var q = $("qui"); q.textContent = "";
+  q.appendChild(document.createTextNode(session.mode === "google" ? "Connecté : " + session.email + " - " : "Connecté par code - "));
+  var b = el("button", "lien", "se déconnecter"); b.type = "button";
+  b.addEventListener("click", function(){ ecrireSession(null); try { google.accounts.id.disableAutoSelect(); } catch (e) {} montrerLogin(); });
+  q.appendChild(b);
+  if (session.mode !== "google") return;
+  q.appendChild(document.createTextNode(" - "));
+  var bc = el("button", "lien", "définir ou changer le code d'accès"); bc.type = "button";
+  q.appendChild(bc);
+  var zone = el("div"); zone.hidden = true;
+  var f = el("form"); f.id = "f-ncode"; f.autocomplete = "off";
+  var inp = el("input"); inp.id = "ncode"; inp.type = "text"; inp.inputMode = "numeric"; inp.maxLength = 8; inp.autocomplete = "off"; inp.placeholder = "4 à 8 chiffres"; inp.setAttribute("aria-label", "Nouveau code");
+  var ok = el("button", "btn", "Enregistrer"); ok.type = "submit";
+  var info = el("div", null, "Ce code ouvre l'appli sur n'importe quel appareil. Le changer déconnecte les appareils entrés avec l'ancien.");
+  f.appendChild(inp); f.appendChild(ok); zone.appendChild(f); zone.appendChild(info); q.appendChild(zone);
+  bc.addEventListener("click", function(){ zone.hidden = !zone.hidden; if (!zone.hidden) inp.focus(); });
+  f.addEventListener("submit", async function(ev){
+    ev.preventDefault(); ok.disabled = true;
+    try { var r = await appel("definir-code", { code: inp.value.trim() }); info.textContent = "Code enregistré."; inp.value = ""; }
+    catch (e) { info.textContent = messageErreur(e); }
+    ok.disabled = false;
+  });
+}
 async function demarrerAppli(){
   $("login").hidden = true; $("app").hidden = false;
-  $("qui").textContent = "Connecté : " + session.email + " - ";
-  var b = el("button", null, "se déconnecter"); b.type = "button";
-  b.addEventListener("click", function(){ ecrireSession(null); try { google.accounts.id.disableAutoSelect(); } catch (e) {} montrerLogin(); });
-  $("qui").appendChild(b);
+  piedDePage();
+  // session glissante : on la prolonge d'un an si elle a plus d'un jour
+  if (!session.emis || Date.now() / 1000 - session.emis > 86400) {
+    try { var s3 = await appel("renouveler", {}); if (s3 && s3.jeton) ecrireSession(s3); } catch (e0) { if (e0 && e0.code === "session") return; }
+  }
   try {
     var e2 = await outil("tarifs_etat", {});
     var n = e2 && e2.lignes && e2.lignes.lignes_courantes, k = e2 && e2.catalogues && e2.catalogues.courants;
@@ -398,6 +453,7 @@ async function demarrerAppli(){
     $("etat").textContent = (n ? Number(n).toLocaleString("fr-FR") + " prix en vigueur" : "") + (k ? " · " + k + " catalogues" : "") + (d ? " · mis à jour le " + dateFr(String(d).slice(0, 10)) : "");
   } catch (e3) { $("etat").textContent = ""; if (!e3 || e3.code !== "session") alerte(messageErreur(e3)); }
 }
+$("f-code").addEventListener("submit", surCode);
 session = lireSession();
 if (session) demarrerAppli(); else montrerLogin();
 })();
